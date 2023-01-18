@@ -273,7 +273,7 @@ class compresor{
      * @return array|string
      * @throws ImagickException
      */
-    public static function comprime_pdf(string $origen): array|string
+    final public static function comprime_pdf(string $origen): array|string
     {
         $errores = new errores();
         $origen = (new compresor)->origen($origen);
