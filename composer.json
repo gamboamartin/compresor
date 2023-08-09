@@ -6,7 +6,8 @@
     "autoload": {
         "psr-4": {
             "gamboamartin\\compresor\\": "src/",
-            "tests\\": "tests/"
+            "gamboamartin\\compresor\\tests\\": "tests/",
+            "config\\": "config/"
         }
     },
     "authors": [

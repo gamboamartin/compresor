@@ -33,11 +33,11 @@ class compresor{
         $errores = new errores();
         $origen = trim($origen);
         if($origen === ''){
-            return $errores->error('Error el origen no puede venir vacio',$origen);
+            return $errores->error(mensaje: 'Error el origen no puede venir vacio',data: $origen);
         }
-        $ruta_origen = $this->ruta_origen($origen);
+        $ruta_origen = $this->ruta_origen(origen: $origen);
         if(errores::$error){
-            return $errores->error('Error al validar',$ruta_origen);
+            return $errores->error(mensaje: 'Error al validar',data: $ruta_origen);
         }
         $zip->addFile($ruta_origen, $name_file);
         return $ruta_origen;
@@ -56,7 +56,7 @@ class compresor{
             if(is_array($name_file)){
                 return $this->error->error('Error al el nombre del archivo no puede ser un array',$name_file);
             }
-            $data = $this->agrega_archivo_zip($origen,$name_file,$zip);
+            $data = $this->agrega_archivo_zip(origen: $origen,name_file: $name_file,zip: $zip);
             if(errores::$error){
                 return $this->error->error('Error al agregar archivo',$data);
             }
@@ -82,16 +82,19 @@ class compresor{
 
     /**
      *
-     * @param string $carpeta_temporales
+     * @param string $carpeta_temporales Carpeta temporales
+     * @param string $name_zip Nombre del documento no obligatorio
      * @return string|array
      */
-    private function crea_ruta_zip(string $carpeta_temporales): string|array
+    private function crea_ruta_zip(string $carpeta_temporales, string $name_zip = ''): string|array
     {
         $carpeta_temporales = trim($carpeta_temporales);
         if($carpeta_temporales === ''){
             return $this->error->error('Error $carpeta_temporales esta vacia',$carpeta_temporales);
         }
-        $name_zip = time().mt_rand(1,9999).'.zip';
+        if($name_zip === ''){
+            $name_zip = time().mt_rand(1,9999).'.zip';
+        }
         return $carpeta_temporales.$name_zip;
     }
 
@@ -105,7 +108,7 @@ class compresor{
     {
         $zip = new ZipArchive;
         if($zip->open($ruta_destino,ZipArchive::CREATE) === TRUE){
-            $data = $this->agrega_archivos_zip($archivos, $zip);
+            $data = $this->agrega_archivos_zip(archivos: $archivos,zip:  $zip);
             if(errores::$error){
                 return $this->error->error('Error al agregar archivos',$data);
             }
@@ -123,32 +126,34 @@ class compresor{
      * @throws !file_exists($ruta_origen)
      * @example
      *  $ruta_origen = $this->ruta_origen($origen);
+     *
+     * @version 2.2.0
      ***/
     private function ruta_origen(string $origen):array|string{
         $errores = new errores();
         if($origen === ''){
-            return $errores->error('Error el origen no puede venir vacio',$origen);
+            return $errores->error(mensaje: 'Error el origen no puede venir vacio',data: $origen);
         }
-
         $ruta_origen = PATH_BASE.$origen;
         if(!file_exists($ruta_origen)){
-            return $errores->error('Error no existe el archivo',$ruta_origen);
+            return $errores->error(mensaje: 'Error no existe el archivo',data: $ruta_origen);
         }
         return $ruta_origen;
     }
 
     /**
      *
+     * @param string $name_zip Nombre del documento temporal
      * @return array|string
      */
-    private function genera_ruta_destino(): array|string
+    private function genera_ruta_destino(string $name_zip = ''): array|string
     {
         $errores = new errores();
         $carpeta_temporales = $this->crea_folder_temporal();
         if(errores::$error){
-            return $errores->error('Error ar crear carpeta',$carpeta_temporales);
+            return $errores->error(mensaje: 'Error ar crear carpeta',data: $carpeta_temporales);
         }
-        $ruta_destino = $this->crea_ruta_zip($carpeta_temporales);
+        $ruta_destino = $this->crea_ruta_zip(carpeta_temporales: $carpeta_temporales,name_zip: $name_zip);
         if(errores::$error){
             return $errores->error('Error ar crear destino',$ruta_destino);
         }
@@ -159,9 +164,10 @@ class compresor{
      *
      * @param string $origen
      * @param string $name_file
+     * @param string $name_zip
      * @return array|string
      */
-    private static function comprime_archivo(string $origen, string $name_file): array|string
+    private static function comprime_archivo(string $origen, string $name_file, string $name_zip = ''): array|string
     {
         $errores = new errores();
         if(!file_exists(PATH_BASE.$origen)){
@@ -172,12 +178,12 @@ class compresor{
             return $errores->error('Error el origen no puede venir vacio',$origen);
         }
 
-        $ruta_origen = (new compresor())->ruta_origen($origen);
+        $ruta_origen = (new compresor())->ruta_origen(origen: $origen);
         if(errores::$error){
             return $errores->error('Error al validar',$ruta_origen);
         }
 
-        $ruta_destino = (new compresor())->genera_ruta_destino();
+        $ruta_destino = (new compresor())->genera_ruta_destino(name_zip: $name_zip);
         if(errores::$error){
             return $errores->error('Error ar crear destino',$ruta_destino);
         }
@@ -196,19 +202,20 @@ class compresor{
     /**
      *
      * @param array $archivos
+     * @param string $name_zip
      * @return array|string
      */
-    private static function comprime_archivos(array $archivos): array|string
+    final public static function comprime_archivos(array $archivos, string $name_zip = ''): array|string
     {
         $errores = new errores();
         if(count($archivos) === 0){
             return $errores->error('Error el no existen archivos a comprimir',$archivos);
         }
-        $ruta_destino = (new compresor())->genera_ruta_destino();
+        $ruta_destino = (new compresor())->genera_ruta_destino(name_zip: $name_zip);
         if(errores::$error){
             return $errores->error('Error ar crear destino',$ruta_destino);
         }
-        $data = (new compresor())->genera_zip_archivos($ruta_destino, $archivos);
+        $data = (new compresor())->genera_zip_archivos(ruta_destino: $ruta_destino,archivos:  $archivos);
         if(errores::$error){
             return $errores->error('Error al agregar archivos',$data);
         }
@@ -543,7 +550,7 @@ class compresor{
 
         $name_file = $name_file_sin_extension.'.'.$extension;
         $name_file_zip = $name_file_sin_extension.'.zip';
-        $zip = compresor::comprime_archivo($origen_normalizado,$name_file);
+        $zip = compresor::comprime_archivo(origen: $origen_normalizado,name_file: $name_file);
         if(errores::$error){
             return $errores->error('Error al comprimir archivo',$zip);
         }
@@ -610,7 +617,7 @@ class compresor{
     {
         $errores = new errores();
         $name_file_zip = $name_zip.'.zip';
-        $zip = compresor::comprime_archivos($archivos);
+        $zip = compresor::comprime_archivos(archivos: $archivos);
         if(errores::$error){
             return $errores->error('Error al obtener zip',$zip);
         }
